@@ -1,0 +1,25 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas de ambiente
+node_modules/
+.vscode/
+.idea/
+
+# Archivos de configuración locales
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos temporales
+*.tmp
+*.bak
