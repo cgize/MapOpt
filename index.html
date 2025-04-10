@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Optimizador de Rutas de Reparto</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -40,11 +40,11 @@
                     <tr>
                         <th>Orden</th>
                         <th>Dirección</th>
-                        <th>Ciudad</th>
-                        <th>Estado</th>
-                        <th>Código Postal</th>
+                        <th class="mobile-hidden">Ciudad</th>
+                        <th class="mobile-hidden">Estado</th>
+                        <th class="mobile-hidden">Código Postal</th>
                         <th>Distancia (km)</th>
-                        <th></th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="resultsBody">

@@ -3,6 +3,14 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
 }
 .container {
     background-color: #f9f9f9;
@@ -20,6 +28,29 @@ h1 {
     background-color: #fff;
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 768px) {
+    .input-section {
+        padding: 10px;
+    }
+    
+    .input-section input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 15px;
+    }
+    
+    .input-section input[type="file"] {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .input-section button {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 16px;
+    }
 }
 label {
     display: block;
@@ -46,6 +77,30 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ajustes para columnas móviles */
+    .mobile-hidden {
+        display: none;
+    }
+    
+    th, td {
+        padding: 6px 4px;
+        font-size: 13px;
+    }
+    
+    /* Hacer que la columna de acciones sea fija */
+    .row-actions {
+        min-width: 100px;
+    }
 }
 th, td {
     border: 1px solid #ddd;
@@ -96,6 +151,12 @@ tr:nth-child(even) {
     margin-top: 20px;
     border-radius: 5px;
 }
+
+@media (max-width: 768px) {
+    #map {
+        height: 350px; /* Mapa más pequeño en móviles */
+    }
+}
 .map-container {
     margin-top: 30px;
     background-color: #fff;
@@ -107,6 +168,19 @@ tr:nth-child(even) {
 .button-container {
     margin: 10px 0 15px;
     text-align: right;
+}
+
+@media (max-width: 768px) {
+    .button-container {
+        text-align: center;
+    }
+    
+    #downloadButton {
+        width: 100%;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        font-size: 16px;
+    }
 }
 
 #downloadButton {
@@ -134,11 +208,18 @@ tr {
 }
 
 tr .row-actions {
-    visibility: hidden;
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    display: flex;
+    justify-content: flex-end;
+    visibility: visible;
+    position: static;
+    padding: 2px 0;
+}
+
+@media (max-width: 768px) {
+    tr .row-actions {
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 /* Efecto hover para las filas */
@@ -146,18 +227,23 @@ tr:hover {
     background-color: rgba(231, 76, 60, 0.1) !important;
 }
 
-tr:hover .row-actions {
-    visibility: visible;
-}
-
 .row-actions button {
     background: none;
     border: none;
     cursor: pointer;
-    margin-left: 5px;
-    padding: 5px;
+    margin: 0 2px;
+    padding: 8px;
     border-radius: 50%;
     transition: background-color 0.2s;
+    font-size: 18px;
+}
+
+@media (max-width: 768px) {
+    .row-actions button {
+        padding: 10px;
+        margin: 2px;
+        font-size: 20px; /* Botones más grandes para móviles */
+    }
 }
 
 .remove-btn {
@@ -193,6 +279,14 @@ tr.ignored {
 
 #recalculateButton:hover {
     background-color: #d35400;
+}
+
+@media (max-width: 768px) {
+    #recalculateButton {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 16px;
+    }
 }
 
 /* Estilos para navegación secuencial */
@@ -236,6 +330,28 @@ tr.ignored {
     font-weight: bold;
 }
 
+@media (max-width: 768px) {
+    .sequential-navigation {
+        padding: 10px;
+    }
+    
+    .nav-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav-buttons button {
+        width: 100%;
+        margin: 5px 0;
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    .current-stop-info {
+        font-size: 14px;
+    }
+}
+
 #nav-to-current-btn {
     background-color: #3498db;
 }
@@ -248,6 +364,14 @@ tr.ignored {
     background-color: #e67e22;
     padding: 8px 15px;
     font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    #reset-route-btn {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 16px;
+    }
 }
 
 /* Estilos para filas completadas */

@@ -199,9 +199,9 @@ function displayResults(locations) {
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${location.Address1 || ''}</td>
-            <td>${location.City || ''}</td>
-            <td>${location.State || ''}</td>
-            <td>${location.Zip || ''}</td>
+            <td class="mobile-hidden">${location.City || ''}</td>
+            <td class="mobile-hidden">${location.State || ''}</td>
+            <td class="mobile-hidden">${location.Zip || ''}</td>
             <td>${location.distanceText || location.distance.toFixed(2) + ' km'}</td>
             <td class="row-actions">
                 <button class="navigate-btn" title="Navegar a esta parada">
