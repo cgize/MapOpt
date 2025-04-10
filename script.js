@@ -2,9 +2,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const startPointInput = document.getElementById('startPoint');
     const csvFileInput = document.getElementById('csvFile');
     const processButton = document.getElementById('processButton');
+    const downloadButton = document.getElementById('downloadButton');
     const statusDiv = document.getElementById('status');
     const resultsBody = document.getElementById('resultsBody');
     const loadingDiv = document.getElementById('loading');
+    
+    // Variable global para almacenar los resultados procesados
+    let processedLocations = [];
     
     // Usar la API Key desde el archivo de configuración
     const apiKey = CONFIG.API_KEY;
@@ -97,11 +101,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ordenar por distancia
             locationsWithDistances.sort((a, b) => a.distance - b.distance);
             
+            // Guardar los resultados para poder descargarlos después
+            processedLocations = locationsWithDistances;
+            
             // Mostrar resultados
             displayResults(locationsWithDistances);
             
             // Mostrar la ruta en el mapa
             displayRouteOnMap(startCoords, locationsWithDistances);
+            
+            // Habilitar el botón de descarga
+            downloadButton.disabled = false;
             
             showStatus('Procesamiento completado con éxito', 'success');
         } catch (error) {
@@ -110,6 +120,63 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             loadingDiv.style.display = 'none';
         }
+    });
+    
+    // Función para descargar los resultados como CSV
+    downloadButton.addEventListener('click', function() {
+        if (processedLocations.length === 0) {
+            showStatus('No hay datos para descargar', 'error');
+            return;
+        }
+        
+        // Crear el contenido del CSV
+        const headers = ['Orden', 'Dirección', 'Ciudad', 'Estado', 'Código Postal', 'Distancia (km)'];
+        let csvContent = headers.join(',') + '\n';
+        
+        processedLocations.forEach((location, index) => {
+            // Escapar comillas en los campos de texto para CSV
+            const address = location.Address1 ? `"${location.Address1.replace(/"/g, '""')}"` : '';
+            const city = location.City ? `"${location.City.replace(/"/g, '""')}"` : '';
+            const state = location.State ? `"${location.State.replace(/"/g, '""')}"` : '';
+            const zip = location.Zip ? `"${location.Zip.replace(/"/g, '""')}"` : '';
+            // Formatear la distancia
+            const distance = location.distanceText || location.distance.toFixed(2) + ' km';
+            
+            // Crear la fila CSV
+            const row = [
+                index + 1,
+                address,
+                city,
+                state,
+                zip,
+                `"${distance.replace(/"/g, '""')}"`
+            ];
+            
+            csvContent += row.join(',') + '\n';
+        });
+        
+        // Crear un objeto Blob con el contenido CSV
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Crear un enlace para descargar el archivo
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        
+        // Generar un nombre de archivo con la fecha y hora actual
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+        const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '-');
+        link.download = `ruta_optimizada_${dateStr}_${timeStr}.csv`;
+        
+        // Simular un clic para iniciar la descarga
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpiar
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        showStatus('Archivo CSV descargado correctamente', 'success');
     });
     
     function showStatus(message, type) {
@@ -380,11 +447,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Crear la ruta si hay al menos una ubicación
         if (locations.length > 0) {
-        // Limitar a 8 waypoints para evitar exceder el límite de la API de Google
-        // La API de Directions tiene un límite de 10 waypoints en total, pero dejamos margen
-        const MAX_WAYPOINTS = 8;
-                    showStatus(`Mostrando ruta para los primeros ${MAX_WAYPOINTS} destinos (limitación de la API de Google Maps)`, 'success');
-                    const waypoints = locations.slice(0, MAX_WAYPOINTS).map(location => {
+            // Limitar a 8 waypoints para evitar exceder el límite de la API de Google
+            // La API de Directions tiene un límite de 10 waypoints en total, pero dejamos margen
+            const MAX_WAYPOINTS = 8;
+            showStatus(`Mostrando ruta para los primeros ${MAX_WAYPOINTS} destinos (limitación de la API de Google Maps)`, 'success');
+            const waypoints = locations.slice(0, MAX_WAYPOINTS).map(location => {
                 return {
                     location: new google.maps.LatLng(location.coords.lat, location.coords.lng),
                     stopover: true
