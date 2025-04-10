@@ -194,3 +194,85 @@ tr.ignored {
 #recalculateButton:hover {
     background-color: #d35400;
 }
+
+/* Estilos para navegación secuencial */
+.sequential-navigation {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f1f9ff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sequential-nav-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sequential-nav-content h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.current-stop-info {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.nav-buttons button {
+    padding: 8px 15px;
+    font-weight: bold;
+}
+
+#nav-to-current-btn {
+    background-color: #3498db;
+}
+
+#mark-current-completed-btn {
+    background-color: #27ae60;
+}
+
+#reset-route-btn {
+    background-color: #e67e22;
+    padding: 8px 15px;
+    font-weight: bold;
+}
+
+/* Estilos para filas completadas */
+tr.completed {
+    background-color: #d4edda !important;
+    color: #155724;
+}
+
+tr.completed:hover {
+    background-color: #c3e6cb !important;
+}
+
+/* Estilos para botones de acción adicionales */
+.navigate-btn {
+    color: #3498db;
+}
+
+.navigate-btn:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.complete-btn {
+    color: #27ae60;
+}
+
+.complete-btn:hover {
+    background-color: rgba(39, 174, 96, 0.1);
+}
