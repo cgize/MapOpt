@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsBody = document.getElementById('resultsBody');
     const loadingDiv = document.getElementById('loading');
     
-    // Google Maps API Key
-    const apiKey = 'AIzaSyCo8mS75n9JrwaaV_CZZv0HUd41yY83bmw';
+    // Usar la API Key desde el archivo de configuración
+    const apiKey = CONFIG.API_KEY;
     
     // Variables globales para el mapa
     let map;
@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function showStatus(message, type) {
         statusDiv.textContent = message;
         statusDiv.className = 'status ' + type;
+        console.log(message); // Agregar registro en consola para depuración
     }
     
     function readCSV(file) {
@@ -173,7 +174,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     async function getLocationsCoordinates(locations) {
         const geocoder = new google.maps.Geocoder();
-        const coordinatesPromises = [];
+        const MAX_LOCATIONS = 100; // Limitar el número máximo de ubicaciones para procesar
+        
+        // Si hay demasiadas ubicaciones, limitar el número para evitar problemas de rendimiento
+        if (locations.length > MAX_LOCATIONS) {
+            showStatus(`Limitando a ${MAX_LOCATIONS} ubicaciones de las ${locations.length} totales para evitar problemas de rendimiento`, 'error');
+            locations = locations.slice(0, MAX_LOCATIONS);
+        }
         
         // Limitar a 10 direcciones a la vez para evitar problemas con las cuotas de la API
         const batchSize = 10;
@@ -230,58 +237,89 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     async function calculateDistances(locations, startCoords) {
-        return new Promise((resolve, reject) => {
+        try {
             const service = new google.maps.DistanceMatrixService();
-            
-            // Preparar las ubicaciones de destino
-            const destinations = locations.map(location => 
-                new google.maps.LatLng(location.coords.lat, location.coords.lng)
-            );
-            
-            // Origen (punto de partida)
             const origin = new google.maps.LatLng(startCoords.lat, startCoords.lng);
             
-            service.getDistanceMatrix(
-                {
-                    origins: [origin],
-                    destinations: destinations,
-                    travelMode: 'DRIVING',
-                    unitSystem: google.maps.UnitSystem.METRIC
-                },
-                function(response, status) {
-                    if (status === 'OK') {
-                        const distances = response.rows[0].elements;
-                        
-                        const locationsWithDistances = locations.map((location, index) => {
-                            const distanceData = distances[index];
-                            
-                            if (distanceData.status === 'OK') {
-                                return {
-                                    ...location,
-                                    distance: distanceData.distance.value / 1000, // Convertir a km
-                                    distanceText: distanceData.distance.text,
-                                    duration: distanceData.duration.value,
-                                    durationText: distanceData.duration.text
-                                };
-                            } else {
-                                // Si no se pudo calcular la distancia, usar una distancia muy grande
-                                return {
-                                    ...location,
-                                    distance: 99999,
-                                    distanceText: 'N/A',
-                                    duration: 99999,
-                                    durationText: 'N/A'
-                                };
-                            }
-                        });
-                        
-                        resolve(locationsWithDistances);
-                    } else {
-                        reject(new Error('Error al calcular distancias: ' + status));
-                    }
+            // Dividir las ubicaciones en lotes para respetar los límites de la API
+            // La API tiene un límite de 25 destinos por solicitud
+            const BATCH_SIZE = 20; // Usamos 20 para estar seguros
+            const batches = [];
+            
+            for (let i = 0; i < locations.length; i += BATCH_SIZE) {
+                batches.push(locations.slice(i, Math.min(i + BATCH_SIZE, locations.length)));
+            }
+            
+            let allLocationsWithDistances = [];
+            
+            // Procesar cada lote secuencialmente
+            for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+                const batchLocations = batches[batchIndex];
+                
+                showStatus(`Calculando distancias (lote ${batchIndex + 1} de ${batches.length})...`, 'success');
+                
+                // Preparar las ubicaciones de destino para este lote
+                const destinations = batchLocations.map(location => 
+                    new google.maps.LatLng(location.coords.lat, location.coords.lng)
+                );
+                
+                // Esperar un momento entre solicitudes para evitar límites de tasa
+                if (batchIndex > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
-            );
-        });
+                
+                // Realizar la solicitud para este lote
+                const batchDistances = await new Promise((resolve, reject) => {
+                    service.getDistanceMatrix(
+                        {
+                            origins: [origin],
+                            destinations: destinations,
+                            travelMode: 'DRIVING',
+                            unitSystem: google.maps.UnitSystem.METRIC
+                        },
+                        function(response, status) {
+                            if (status === 'OK') {
+                                const distances = response.rows[0].elements;
+                                
+                                const locationsWithDistances = batchLocations.map((location, index) => {
+                                    const distanceData = distances[index];
+                                    
+                                    if (distanceData.status === 'OK') {
+                                        return {
+                                            ...location,
+                                            distance: distanceData.distance.value / 1000, // Convertir a km
+                                            distanceText: distanceData.distance.text,
+                                            duration: distanceData.duration.value,
+                                            durationText: distanceData.duration.text
+                                        };
+                                    } else {
+                                        // Si no se pudo calcular la distancia, usar una distancia muy grande
+                                        return {
+                                            ...location,
+                                            distance: 99999,
+                                            distanceText: 'N/A',
+                                            duration: 99999,
+                                            durationText: 'N/A'
+                                        };
+                                    }
+                                });
+                                
+                                resolve(locationsWithDistances);
+                            } else {
+                                reject(new Error('Error al calcular distancias: ' + status));
+                            }
+                        }
+                    );
+                });
+                
+                // Agregar los resultados de este lote a los resultados totales
+                allLocationsWithDistances = [...allLocationsWithDistances, ...batchDistances];
+            }
+            
+            return allLocationsWithDistances;
+        } catch (error) {
+            throw new Error('Error al calcular distancias: ' + error.message);
+        }
     }
     
     function displayResults(locations) {
@@ -342,9 +380,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Crear la ruta si hay al menos una ubicación
         if (locations.length > 0) {
-            // Limitar a 10 waypoints para evitar exceder el límite de la API de Google
-            const MAX_WAYPOINTS = 10;
-            const waypoints = locations.slice(0, MAX_WAYPOINTS).map(location => {
+        // Limitar a 8 waypoints para evitar exceder el límite de la API de Google
+        // La API de Directions tiene un límite de 10 waypoints en total, pero dejamos margen
+        const MAX_WAYPOINTS = 8;
+                    showStatus(`Mostrando ruta para los primeros ${MAX_WAYPOINTS} destinos (limitación de la API de Google Maps)`, 'success');
+                    const waypoints = locations.slice(0, MAX_WAYPOINTS).map(location => {
                 return {
                     location: new google.maps.LatLng(location.coords.lat, location.coords.lng),
                     stopover: true
