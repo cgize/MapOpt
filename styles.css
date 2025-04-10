@@ -127,3 +127,70 @@ tr:nth-child(even) {
     background-color: #95a5a6;
     cursor: not-allowed;
 }
+
+/* Estilos para los iconos y botones de acción */
+tr {
+    position: relative;
+}
+
+tr .row-actions {
+    visibility: hidden;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Efecto hover para las filas */
+tr:hover {
+    background-color: rgba(231, 76, 60, 0.1) !important;
+}
+
+tr:hover .row-actions {
+    visibility: visible;
+}
+
+.row-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 5px;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.remove-btn {
+    color: #e74c3c;
+}
+
+.remove-btn:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Estilo para filas ignoradas */
+tr.ignored {
+    opacity: 0.5;
+    text-decoration: line-through;
+    background-color: #f8f8f8 !important;
+}
+
+/* Botón para recalcular */
+.recalculate-container {
+    margin: 15px 0;
+    display: none;
+}
+
+#recalculateButton {
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#recalculateButton:hover {
+    background-color: #d35400;
+}
