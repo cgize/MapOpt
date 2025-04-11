@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Optimizador de Rutas de Reparto</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- SheetJS library for Excel files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Font Awesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -14,12 +19,67 @@
             <label for="startPoint">Punto de Partida:</label>
             <input type="text" id="startPoint" value="19308 70th Ave S, Kent, WA 98032" style="width: 300px;">
             
-            <label for="csvFile">Cargar Archivo CSV:</label>
-            <input type="file" id="csvFile" accept=".csv">
+            <label for="csvFile">Cargar Archivo (CSV o XLSX):</label>
+            <input type="file" id="csvFile" accept=".csv,.xlsx,.xls">
             
             <button id="processButton">Procesar y Ordenar</button>
+            <button id="configButton" class="config-button"><i class="fas fa-cog"></i> Configuración</button>
             
             <div id="status" class="status"></div>
+            
+            <!-- Modal de Configuración -->
+            <div id="configModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Configuración de Optimización</h2>
+                    
+                    <div class="config-section">
+                        <h3>API de Google Maps</h3>
+                        <div class="form-group">
+                            <label for="apiKey">Clave de API:</label>
+                            <input type="text" id="apiKey" placeholder="Ingresa tu clave de API de Google Maps">
+                        </div>
+                        <p class="help-text">La clave API se usará para los servicios de geocodificación y cálculo de rutas.</p>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3>Algoritmo de Optimización</h3>
+                        <div class="form-group">
+                            <p>Vecino más cercano</p>
+                            <p class="help-text">Este algoritmo encuentra el siguiente punto más cercano en cada paso, ofreciendo una buena relación entre velocidad y eficiencia.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3>Preferencias de Ruta</h3>
+                        <div class="form-group">
+                            <label for="avoidTolls">Evitar peajes:</label>
+                            <input type="checkbox" id="avoidTolls">
+                        </div>
+                        <div class="form-group">
+                            <label for="avoidHighways">Evitar autopistas:</label>
+                            <input type="checkbox" id="avoidHighways">
+                        </div>
+                        <div class="form-group">
+                            <label for="transportMode">Modo de transporte:</label>
+                            <select id="transportMode">
+                                <option value="driving">En automóvil</option>
+                                <option value="bicycling">En bicicleta</option>
+                                <option value="walking">Caminando</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <p class="storage-notice">Tus configuraciones se guardan automáticamente en este dispositivo.</p>
+                    </div>
+                    
+                    <div class="buttons-container">
+                        <button id="saveConfig" class="primary-button">Aplicar Cambios</button>
+                        <button id="resetConfig" class="secondary-button">Restaurar Valores</button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="loading" id="loading">
@@ -29,6 +89,9 @@
         
         <div id="results">
             <h2>Resultados</h2>
+            <div class="filter-container">
+                <input type="text" id="addressFilter" placeholder="Filtrar por dirección..." class="filter-input">
+            </div>
             <div class="button-container">
                 <button id="downloadButton" disabled>Descargar CSV</button>
                 <div class="recalculate-container">
@@ -40,10 +103,8 @@
                     <tr>
                         <th>Orden</th>
                         <th>Dirección</th>
-                        <th class="mobile-hidden">Ciudad</th>
-                        <th class="mobile-hidden">Estado</th>
-                        <th class="mobile-hidden">Código Postal</th>
                         <th>Distancia (km)</th>
+                        <th>Tipo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -59,9 +120,11 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/map.js"></script>
-    <script src="js/data.js"></script>
+    <script src="js/dataHandler.js"></script>
+    <script src="js/routeOptimizer.js"></script>
+    <script src="js/dataModule.js"></script>
     <script src="js/ui.js"></script>
 </body>
 </html>

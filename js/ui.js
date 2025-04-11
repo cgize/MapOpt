@@ -9,6 +9,7 @@ let statusDiv;
 let resultsBody;
 let loadingDiv;
 let recalculateButton;
+let addressFilterInput;
 
 // Variables para controlar las paradas ignoradas
 let ignoredStops = [];
@@ -33,6 +34,7 @@ function initUI() {
     resultsBody = document.getElementById('resultsBody');
     loadingDiv = document.getElementById('loading');
     recalculateButton = document.getElementById('recalculateButton');
+    addressFilterInput = document.getElementById('addressFilter');
     
     // Configurar event listeners
     processButton.addEventListener('click', processData);
@@ -40,6 +42,9 @@ function initUI() {
         DataModule.downloadCSV(processedLocations);
     });
     recalculateButton.addEventListener('click', recalculateRoute);
+    
+    // Agregar event listener para el filtro de direcciones
+    addressFilterInput.addEventListener('input', filterAddresses);
 }
 
 // Función para mostrar mensajes de estado
@@ -55,12 +60,22 @@ async function processData() {
     const startPoint = startPointInput.value.trim();
     
     if (!file) {
-        showStatus('Por favor, selecciona un archivo CSV', 'error');
+        showStatus('Por favor, selecciona un archivo CSV o Excel', 'error');
         return;
     }
     
     if (!startPoint) {
         showStatus('Por favor, ingresa un punto de partida', 'error');
+        return;
+    }
+    
+    // Verificar el tipo de archivo
+    const fileName = file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    const isCsv = fileName.endsWith('.csv');
+    
+    if (!isExcel && !isCsv) {
+        showStatus('Por favor, selecciona un archivo CSV o Excel (.xlsx, .xls)', 'error');
         return;
     }
     
@@ -71,17 +86,21 @@ async function processData() {
         // Leer el archivo CSV
         const csvData = await DataModule.readCSV(file);
         
-        // Verificar que el CSV tiene datos válidos
+        // Verificar que el archivo tiene datos válidos
         if (!csvData || csvData.length === 0) {
-            throw new Error('El archivo CSV está vacío o no tiene el formato correcto.');
+            const fileType = isExcel ? 'Excel' : 'CSV';
+            throw new Error(`El archivo ${fileType} está vacío o no tiene el formato correcto.`);
         }
         
-        // Verificar que el CSV tiene las columnas necesarias
-        const requiredColumns = ['Address1', 'City', 'State', 'Zip'];
-        const missingColumns = requiredColumns.filter(col => !Object.keys(csvData[0]).includes(col));
+        // Verificar que tenemos la información necesaria de direcciones
+        const missingInfo = [];
+        if (!csvData[0].Address1) missingInfo.push('Dirección');
+        if (!csvData[0].City) missingInfo.push('Ciudad');
+        if (!csvData[0].Zip) missingInfo.push('Código Postal');
         
-        if (missingColumns.length > 0) {
-            throw new Error(`El archivo CSV no contiene las columnas requeridas: ${missingColumns.join(', ')}`);
+        if (missingInfo.length > 0) {
+            const fileType = isExcel ? 'Excel' : 'CSV';
+            throw new Error(`No se pudo extraer la siguiente información del archivo ${fileType}: ${missingInfo.join(', ')}. Verifica el formato del archivo.`);
         }
         
         // Asegurarse de que Google Maps API esté cargado
@@ -103,8 +122,8 @@ async function processData() {
         const locationsWithCoords = await MapModule.getLocationsCoordinates(csvData);
         const locationsWithDistances = await MapModule.calculateDistances(locationsWithCoords, startCoords);
         
-        // Optimizar la ruta usando el algoritmo del vecino más cercano
-        const optimizedRoute = DataModule.optimizeRouteNearestNeighbor(locationsWithDistances, startCoords);
+        // Optimizar la ruta usando el algoritmo seleccionado en la configuración
+        const optimizedRoute = DataModule.optimizeRoute(locationsWithDistances, startCoords);
         
         // Guardar los resultados para poder descargarlos después
         processedLocations = optimizedRoute;
@@ -183,11 +202,43 @@ function recalculateRoute() {
     showStatus('Ruta recalculada con éxito', 'success');
 }
 
+// Función para filtrar direcciones
+function filterAddresses() {
+    const filterText = addressFilterInput.value.toLowerCase();
+    const rows = resultsBody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const index = parseInt(row.dataset.index);
+        const location = processedLocations[index];
+        
+        // Buscar en dirección, ciudad, estado y código postal
+        const addressText = (location.Address1 || '').toLowerCase();
+        const cityText = (location.City || '').toLowerCase();
+        const stateText = (location.State || '').toLowerCase();
+        const zipText = (location.Zip || '').toLowerCase();
+        
+        // Determinar si la fila coincide con el filtro
+        const matches = 
+            addressText.includes(filterText) || 
+            cityText.includes(filterText) || 
+            stateText.includes(filterText) || 
+            zipText.includes(filterText);
+        
+        // Mostrar u ocultar la fila según coincida con el filtro
+        row.style.display = matches ? '' : 'none';
+    });
+}
+
 // Función para mostrar resultados en la tabla
 function displayResults(locations) {
     resultsBody.innerHTML = '';
     
     locations.forEach((location, index) => {
+        // Determinar el tipo de ubicación
+        if (!location.locationType) {
+            location.locationType = DataModule.determineLocationType(location);
+        }
+        
         const row = document.createElement('tr');
         row.dataset.index = index;
         
@@ -199,10 +250,8 @@ function displayResults(locations) {
         row.innerHTML = `
             <td>${index + 1}</td>
             <td>${location.Address1 || ''}</td>
-            <td class="mobile-hidden">${location.City || ''}</td>
-            <td class="mobile-hidden">${location.State || ''}</td>
-            <td class="mobile-hidden">${location.Zip || ''}</td>
             <td>${location.distanceText || location.distance.toFixed(2) + ' km'}</td>
+            <td>${location.locationType}</td>
             <td class="row-actions">
                 <button class="navigate-btn" title="Navegar a esta parada">
                     🚗
@@ -366,7 +415,7 @@ function updateSequentialNavigation() {
             <h3>Navegación Secuencial</h3>
             <p>Progreso: ${totalCompleted}/${totalStops} entregas completadas</p>
             <div class="current-stop-info">
-                <p><strong>Siguiente Parada (#${currentStopIndex + 1}):</strong></p>
+                <p><strong>Siguiente Parada (#${currentStopIndex + 1}) - ${currentStop.locationType}:</strong></p>
                 <p>${currentStop.Address1}, ${currentStop.City}, ${currentStop.State} ${currentStop.Zip}</p>
             </div>
             <div class="nav-buttons">
@@ -397,7 +446,8 @@ window.UIModule = {
     displayResults,
     navigateToStop,
     markAsCompleted,
-    updateSequentialNavigation
+    updateSequentialNavigation,
+    filterAddresses
 };
 
 // Exponer la función showStatus globalmente para que otros módulos puedan usarla
@@ -407,6 +457,10 @@ window.showStatus = showStatus;
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar la interfaz de usuario
     initUI();
+    
+    // Inicializar el módulo de configuración
+    ConfigModule.initConfigModal();
+    ConfigModule.loadConfig();
     
     // Inicializar el mapa
     MapModule.initMap();

@@ -1,0 +1,8 @@
+No podemos crear directamente un archivo .xlsx ya que es un formato binario. En su lugar, recomendamos que cree un archivo Excel utilizando Microsoft Excel o LibreOffice Calc con los siguientes encabezados y datos de ejemplo:
+
+Recipient,Address,City,Zip,DeliverBy,Weight,Pieces
+"RICHARD DICK (360) 692-0661","10090 OGLE RD NE","POULSBO","98370","5:00PM","7","1"
+"","142 Camano Ln","Port Ludlow","98365","5:00PM","11","11"
+"April matzenbacher","161 Ann kivley drive","Port hadlock","98339","5:00PM","45","1"
+"MARCIA HUNTING","19160 FRONT ST N.E.","POULSBO","98370","5:00PM","2","1"
+"MARTHA AND MARY NURSING HOME","19160 FRONT ST NE","POULSBO","98370","5:00PM","84","6"
